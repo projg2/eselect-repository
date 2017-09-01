@@ -70,16 +70,14 @@ def main():
             type=lxml.etree.parse,
             help='Location of repositories.xml file')
 
-    actions = p.add_argument_group('actions')
-    actions.add_argument('--list',
-            dest='actions', action='append_const', const='list',
+    actions = p.add_subparsers(title='actions', dest='action')
+    actions.add_parser('list',
             help='List of remote & local repositories')
 
     args = p.parse_args()
 
-    for a in args.actions:
-        if a == 'list':
-            do_list(args)
+    if args.action == 'list':
+        do_list(args)
 
 
 if __name__ == '__main__':

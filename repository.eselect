@@ -72,7 +72,7 @@ do_list() {
 				;;
 		esac
 		write_numbered_list_entry "$(( i++ ))" "${name}"
-	done < <(run_helper --list)
+	done < <(run_helper list)
 }
 ## }}}
 
