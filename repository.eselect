@@ -62,9 +62,15 @@ do_list() {
 	write_list_start "Available repositories:"
 	local name state i=1
 	while read name state; do
-		if [[ ${state} == enabled ]]; then
-			name=$(highlight_marker "${name}")
-		fi
+		case ${state} in
+			enabled)
+				name=$(highlight_marker "${name}");;
+			need-update)
+				if ! is_output_mode brief; then
+					name+=" $(highlight_warning '#')"
+				fi
+				;;
+		esac
 		write_numbered_list_entry "$(( i++ ))" "${name}"
 	done < <(run_helper --list)
 }

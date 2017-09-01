@@ -14,12 +14,34 @@ import os
 import os.path
 
 
+def transform_source(source_el, repo_name):
+    """Transform <source/> into (sync-type, sync-uri) pair."""
+    stype = source_el.get('type')
+    suri = source_el.text
+    # pass-through
+    if stype in ('bzr', 'git', 'rsync', 'svn'):
+        return (stype, suri)
+    # map to 'hg' syncer
+    elif stype == 'mercurial':
+        return ('hg', suri)
+    else:
+        print('warning: {}: unsupported source type {}'.format(
+            repo_name, stype))
+        return None
+
+
 def do_list(args):
     for r in sorted(args.repositories_xml.getroot(),
                     key=lambda x: locale.strxfrm(x.findtext('name'))):
         name = r.findtext('name')
+        uris = [transform_source(s, name) for s in r.findall('source')]
         if name in args.repos_conf:
-            status = 'enabled'
+            sect = args.repos_conf[name]
+            sync_params = (sect.get('sync-type'), sect.get('sync-uri'))
+            if sync_params in uris:
+                status = 'enabled'
+            else:
+                status = 'need-update'
         else:
             status = 'disabled'
         print('{} {}'.format(name, status))
