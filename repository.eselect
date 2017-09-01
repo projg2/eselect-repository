@@ -1,0 +1,73 @@
+# Copyright (c) 2017 Michał Górny
+# 2-clause BSD license
+
+DESCRIPTION="Manage repository list in repos.conf"
+MAINTAINER="Michał Górny <mgorny@gentoo.org>"
+VERSION=0
+
+### directories
+# TODO: use substitution on this
+
+CACHEDIR=/tmp
+SYSCONFDIR=/etc
+HELPER=./eselect-repo-helper
+
+### configuration
+# TODO: make this configurable
+
+REPOS_CONF=${SYSCONFDIR}/portage/repos.conf
+
+REMOTE_LIST_URI=https://qa-reports.gentoo.org/output/repos/repositories.xml
+REMOTE_LIST_CACHE=${CACHEDIR}/repositories.xml
+# every 2 hours -- mostly to avoid wget output on every command
+REMOTE_LIST_REFRESH=$(( 2 * 3600 ))
+
+### helper functions
+
+update_cache() {
+	local refts
+
+	if [[ -f ${REMOTE_LIST_CACHE} ]]; then
+		refts=$(( $(date '+%s') - REMOTE_LIST_REFRESH ))
+		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
+	fi
+
+	wget -N -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
+		die "Unable to fetch repositories.xml"
+
+	# touch the file after rechecking; if the file was not modified,
+	# wget will leave the old timestamp and this will trigger repeating
+	# rechecks
+	[[ ${refts} ]] && touch "${REMOTE_LIST_CACHE}"
+}
+
+run_helper() {
+	"${HELPER}" \
+		--repos-conf "${REPOS_CONF}" \
+		--repositories-xml "${REMOTE_LIST_CACHE}" \
+		"${@}" ||
+		die "Helper failed to run"
+}
+
+### list action
+
+## {{{
+describe_list() {
+	echo "List all repositories"
+}
+
+do_list() {
+	update_cache
+
+	write_list_start "Available repositories:"
+	local name state i=1
+	while read name state; do
+		if [[ ${state} == enabled ]]; then
+			name=$(highlight_marker "${name}")
+		fi
+		write_numbered_list_entry "$(( i++ ))" "${name}"
+	done < <(run_helper --list)
+}
+## }}}
+
+# vim: ts=4 sw=4 noet fdm=marker

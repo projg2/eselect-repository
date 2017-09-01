@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# Copyright (c) 2017 Michał Górny
+# 2-clause BSD license
+
+# This is a Python helper script for eselect-repo that wraps routines
+# for repositories.xml & repos.conf file. It helps us avoid ugly sed
+# and/or dependency on non-common packages.
+
+import argparse
+import configparser
+import lxml.etree
+import os
+import os.path
+
+
+def do_list(args):
+    for r in args.repositories_xml.getroot():
+        name = r.findtext('name')
+        if name in args.repos_conf:
+            status = 'enabled'
+        else:
+            status = 'disabled'
+        print('{} {}'.format(name, status))
+
+
+def make_configparser(path):
+    cfgp = configparser.ConfigParser(interpolation=None)
+    if os.path.isdir(path):
+        paths = [os.path.join(path, x) for x in os.listdir(path)
+                 if not x.startswith('.')]
+    else:
+        paths = [path]
+    cfgp.read(paths)
+    return cfgp
+
+
+def main():
+    p = argparse.ArgumentParser()
+
+    paths = p.add_argument_group('paths')
+    paths.add_argument('--repos-conf', required=True,
+            type=make_configparser,
+            help='Location of repos.conf file')
+    paths.add_argument('--repositories-xml', required=True,
+            type=lxml.etree.parse,
+            help='Location of repositories.xml file')
+
+    actions = p.add_argument_group('actions')
+    actions.add_argument('--list',
+            dest='actions', action='append_const', const='list',
+            help='List of remote & local repositories')
+
+    args = p.parse_args()
+
+    for a in args.actions:
+        if a == 'list':
+            do_list(args)
+
+
+if __name__ == '__main__':
+    main()
