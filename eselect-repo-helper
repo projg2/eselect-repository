@@ -8,13 +8,15 @@
 
 import argparse
 import configparser
+import locale
 import lxml.etree
 import os
 import os.path
 
 
 def do_list(args):
-    for r in args.repositories_xml.getroot():
+    for r in sorted(args.repositories_xml.getroot(),
+                    key=lambda x: locale.strxfrm(x.findtext('name'))):
         name = r.findtext('name')
         if name in args.repos_conf:
             status = 'enabled'
@@ -35,6 +37,7 @@ def make_configparser(path):
 
 
 def main():
+    locale.setlocale(locale.LC_ALL, '')
     p = argparse.ArgumentParser()
 
     paths = p.add_argument_group('paths')
