@@ -12,6 +12,7 @@ import locale
 import lxml.etree
 import os
 import os.path
+import tempfile
 
 
 def transform_source(source_el, repo_name):
@@ -47,6 +48,24 @@ def do_list(args):
         print('{} {}'.format(name, status))
 
 
+def do_metadata(args):
+    all_repos = set(x.findtext('name') for x in args.repositories_xml.getroot())
+
+    for r in args.repo:
+        if r not in args.repos_conf:
+            print('{} not-exist'.format(r))
+            continue
+
+        if r not in all_repos:
+            state = 'local'
+        elif 'sync-uri' not in args.repos_conf[r]:
+            state = 'no-sync-uri'
+        else:
+            state = 'remote'
+        local_path = args.repos_conf[r].get('location', '')
+        print('{} {} {}'.format(r, state, local_path))
+
+
 def make_configparser(path):
     cfgp = configparser.ConfigParser(interpolation=None)
     if os.path.isdir(path):
@@ -54,6 +73,8 @@ def make_configparser(path):
                  if not x.startswith('.')]
     else:
         paths = [path]
+    # monkey-patch our path list in
+    cfgp._erh_paths = paths
     cfgp.read(paths)
     return cfgp
 
@@ -74,10 +95,19 @@ def main():
     actions.add_parser('list',
             help='List of remote & local repositories')
 
+    metadata_action = actions.add_parser('metadata',
+            help='Print metadata for given repos')
+    metadata_action.add_argument('repo', nargs='+',
+            help='Repository to print metadata for')
+
     args = p.parse_args()
 
     if args.action == 'list':
         do_list(args)
+    elif args.action == 'metadata':
+        do_metadata(args)
+    else:
+        raise NotImplementedError('Action {} not implemented'.format(args.action))
 
 
 if __name__ == '__main__':

@@ -49,6 +49,88 @@ run_helper() {
 		die "Helper failed to run"
 }
 
+### delete action
+
+## {{{
+describe_delete() {
+	echo "Remove installed repository"
+}
+
+describe_delete_parameters() {
+	echo "[-f] <name>..."
+}
+
+describe_delete_options() {
+	echo "-f        : Force potentially dangerous removals"
+	echo "<name>... : Names of repositories to delete"
+}
+
+do_delete() {
+	local force
+	if [[ ${1} == -f ]]; then
+		force=1
+		shift
+	fi
+	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
+
+	update_cache
+
+	local r state path removed=()
+	while read r state path; do
+		case ${state} in
+			not-exist)
+				echo "error: ${r}: repository not in repos.conf"
+				continue
+				;;
+			local)
+				if [[ ! ${force} ]]; then
+					echo "error: ${r}: repository not in remote list, pass -f to force removal"
+					continue
+				fi
+				;;
+			no-sync-uri)
+				if [[ ! ${force} ]]; then
+					echo "error: ${r}: repository has no sync-uri, pass -f to force removal"
+					continue
+				fi
+				;;
+		esac
+
+		# if path is empty, we still want to remove the config entry
+		if [[ ${path} ]]; then
+			echo "Removing ${path} ..."
+			rm -r -f "${path}"
+		fi
+
+		removed+=( "${r}" )
+	done < <(run_helper metadata "${@}")
+
+	if [[ ${removed[@]} ]]; then
+		local expr='\('
+		for r in "${removed[@]}"; do
+			expr+="${r}\|"
+		done
+		expr="${expr%|})"
+
+		local files=()
+		if [[ -d ${REPOS_CONF} ]]; then
+			# filter only to files containing the repos
+			while IFS= read -r -d '' f; do
+				files+=( "${f}" )
+			done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
+		else
+			files=( "${REPOS_CONF}" )
+		fi
+
+		echo "Updating repos.conf ..."
+		sed -n -i~ -e "/^\s*\[${expr}\]\s*\$/{b loop}; p; b;
+				:loop {n;/^\s*[^\[]/b loop};" "${files[@]}" || die
+
+		echo "${#removed[@]} repositories removed"
+	fi
+}
+## }}}
+
 ### list action
 
 ## {{{
