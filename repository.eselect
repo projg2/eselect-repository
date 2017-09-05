@@ -36,13 +36,11 @@ update_cache() {
 		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
 	fi
 
-	wget -N -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
+	# do not force server timestamps as they will cause immediate rechecks
+	# (If-Modified-Since will work with the current mtime anyway, unless
+	# user's clock has drifted seriously)
+	wget -N --no-use-server-timestamps -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
 		die "Unable to fetch repositories.xml"
-
-	# touch the file after rechecking; if the file was not modified,
-	# wget will leave the old timestamp and this will trigger repeating
-	# rechecks
-	[[ ${refts} ]] && touch "${REMOTE_LIST_CACHE}"
 }
 
 run_helper() {
