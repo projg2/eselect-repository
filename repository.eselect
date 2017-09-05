@@ -10,12 +10,16 @@ VERSION=0
 
 CACHEDIR=/tmp
 SYSCONFDIR=/etc
+SHAREDSTATEDIR=/var
 HELPER=./eselect-repo-helper
 
 ### configuration
 # TODO: make this configurable
 
 REPOS_CONF=${SYSCONFDIR}/portage/repos.conf
+# if repos.conf is a directory
+REPOS_CONF_SUBFILE=${REPOS_CONF}/eselect-repo.conf
+REPOS_BASE=${SHAREDSTATEDIR}/db/repos
 
 REMOTE_LIST_URI=https://qa-reports.gentoo.org/output/repos/repositories.xml
 REMOTE_LIST_CACHE=${CACHEDIR}/repositories.xml
@@ -48,6 +52,78 @@ run_helper() {
 		"${@}" ||
 		die "Helper failed to run"
 }
+
+### add action
+
+## {{{
+describe_add() {
+	echo "Add a new repository"
+}
+
+describe_add_parameters() {
+	echo "<name>..."
+}
+
+describe_add_options() {
+	echo "<name>... : Names of repositories to add"
+}
+
+do_add() {
+	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
+
+	update_cache
+
+	local r state arg1 arg2 new_lines= added=()
+	while read r state arg1 arg2; do
+		case ${state} in
+			enabled)
+				echo "error: ${r}: repository already enabled, in ${arg1}"
+				continue
+				;;
+			not-exist)
+				echo "error: ${r}: repository not in repositories.xml"
+				continue
+				;;
+			unsupported)
+				echo "error: ${r}: repository source VCS not supported"
+				continue
+				;;
+
+		esac
+
+		added+=( "${r}" )
+		# note: escape all the backslashes for sed, and add command
+		# continuations
+		new_lines+="\\${new_lines:+
+\\}
+[${r//\\/\\\\}]\\
+location = ${REPOS_BASE//\\/\\\\}/${r//\\/\\\\}\\
+sync-type = ${arg1//\\/\\\\}\\
+sync-uri = ${arg2//\\/\\\\}"
+	done < <(run_helper remote-metadata "${@}")
+
+	if [[ ${added[@]} ]]; then
+		local f
+		# if repos.conf is a directory, create a dedicated subfile
+		if [[ -d ${REPOS_CONF} ]]; then
+			f=${REPOS_CONF_SUBFILE}
+		else
+			f=${REPOS_CONF}
+		fi
+
+		# note: the file must be non-empty for sed to work
+		if [[ ! -s ${f} ]]; then
+			echo "# created by eselect-repo" > "${f}" || die
+		fi
+
+		echo "Updating ${f} ..."
+		sed -i -e "\$ a\\
+${new_lines}" "${f}" || die
+
+		echo "${#added[@]} repositories added"
+	fi
+}
+## }}}
 
 ### delete action
 

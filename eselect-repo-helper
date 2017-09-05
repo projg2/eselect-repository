@@ -66,6 +66,29 @@ def do_metadata(args):
         print('{} {} {}'.format(r, state, local_path))
 
 
+def do_remote_metadata(args):
+    all_repos = dict((x.findtext('name'), x) for x in args.repositories_xml.getroot())
+
+    for r in args.repo:
+        if r in args.repos_conf:
+            print('{} enabled {}'.format(r, args.repos_conf[r].get('location', '')))
+            continue
+        if r not in all_repos:
+            print('{} not-exist'.format(r))
+            continue
+
+        sources = all_repos[r].findall('source')
+        for s in sources:
+            sync_data = transform_source(s, r)
+            if sync_data is not None:
+                break
+        else:
+            print('{} unsupported'.format(r))
+            continue
+
+        print('{} remote {} {}'.format(r, sync_data[0], sync_data[1]))
+
+
 def make_configparser(path):
     cfgp = configparser.ConfigParser(interpolation=None)
     if os.path.isdir(path):
@@ -100,12 +123,19 @@ def main():
     metadata_action.add_argument('repo', nargs='+',
             help='Repository to print metadata for')
 
+    metadata_action = actions.add_parser('remote-metadata',
+            help='Print metadata for given remote repos')
+    metadata_action.add_argument('repo', nargs='+',
+            help='Repository to print metadata for')
+
     args = p.parse_args()
 
     if args.action == 'list':
         do_list(args)
     elif args.action == 'metadata':
         do_metadata(args)
+    elif args.action == 'remote-metadata':
+        do_remote_metadata(args)
     else:
         raise NotImplementedError('Action {} not implemented'.format(args.action))
 
