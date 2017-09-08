@@ -112,6 +112,29 @@ add_to_repos_conf() {
 ${new_lines}" "${f}" || die
 }
 
+# Remove the specified repositories (${@}) from repos.conf file.
+remove_from_repos_conf() {
+	local expr='\('
+	for r; do
+		expr+="${r}\|"
+	done
+	expr="${expr%|})"
+
+	local files=()
+	if [[ -d ${REPOS_CONF} ]]; then
+		# filter only to files containing the repos
+		while IFS= read -r -d '' f; do
+			files+=( "${f}" )
+		done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
+	else
+		files=( "${REPOS_CONF}" )
+	fi
+
+	echo "Updating repos.conf ..."
+	sed -n -i~ -e "/^\s*\[${expr}\]\s*\$/{b loop}; p; b;
+			:loop {n;/^\s*[^\[]/b loop};" "${files[@]}" || die
+}
+
 ### add action
 
 ## {{{
@@ -271,26 +294,7 @@ do_disable() {
 	done < <(run_helper metadata "${repos[@]}")
 
 	if [[ ${removed[@]} ]]; then
-		local expr='\('
-		for r in "${removed[@]}"; do
-			expr+="${r}\|"
-		done
-		expr="${expr%|})"
-
-		local files=()
-		if [[ -d ${REPOS_CONF} ]]; then
-			# filter only to files containing the repos
-			while IFS= read -r -d '' f; do
-				files+=( "${f}" )
-			done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
-		else
-			files=( "${REPOS_CONF}" )
-		fi
-
-		echo "Updating repos.conf ..."
-		sed -n -i~ -e "/^\s*\[${expr}\]\s*\$/{b loop}; p; b;
-				:loop {n;/^\s*[^\[]/b loop};" "${files[@]}" || die
-
+		remove_from_repos_conf "${removed[@]}"
 		echo "${#removed[@]} repositories disabled"
 	fi
 }
@@ -355,26 +359,7 @@ do_remove() {
 	done < <(run_helper metadata "${repos[@]}")
 
 	if [[ ${removed[@]} ]]; then
-		local expr='\('
-		for r in "${removed[@]}"; do
-			expr+="${r}\|"
-		done
-		expr="${expr%|})"
-
-		local files=()
-		if [[ -d ${REPOS_CONF} ]]; then
-			# filter only to files containing the repos
-			while IFS= read -r -d '' f; do
-				files+=( "${f}" )
-			done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
-		else
-			files=( "${REPOS_CONF}" )
-		fi
-
-		echo "Updating repos.conf ..."
-		sed -n -i~ -e "/^\s*\[${expr}\]\s*\$/{b loop}; p; b;
-				:loop {n;/^\s*[^\[]/b loop};" "${files[@]}" || die
-
+		remove_from_repos_conf "${removed[@]}"
 		echo "${#removed[@]} repositories removed"
 	fi
 }
