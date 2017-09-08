@@ -51,6 +51,41 @@ run_helper() {
 		die -q "helper failed to run"
 }
 
+# Convert numerical repository indices in ${@}. Store resulting
+# repository list as repos=() array.
+convert_indices() {
+	local have_numerical= r
+	for r; do
+		if is_number "${r}"; then
+			have_numerical=1
+		fi
+	done
+
+	if [[ ! ${have_numerical} ]]; then
+		repos=( "${@}" )
+		return
+	fi
+
+	[[ -f ${REMOTE_LIST_CACHE} ]] ||
+		die -q "unable to use numerical indices before calling 'list'"
+
+	# shift indexes to ease referencing
+	local all_repos=( '' )
+	local name state
+	while read name state; do
+		all_repos+=( "${name}" )
+	done < <(run_helper list)
+
+	repos=()
+	for r; do
+		if is_number "${r}"; then
+			repos+=( "${all_repos[r]}" )
+		else
+			repos+=( "${r}" )
+		fi
+	done
+}
+
 ### add action
 
 ## {{{
@@ -59,16 +94,18 @@ describe_add() {
 }
 
 describe_add_parameters() {
-	echo "<name>..."
+	echo "(<name>|<index>)..."
 }
 
 describe_add_options() {
-	echo "<name>... : Names of repositories to add"
+	echo "<name>...  : Names of repositories to add"
+	echo "<index>... : Numeric index of the repository (from 'list' command)"
 }
 
 do_add() {
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	convert_indices "${@}"
 	update_cache
 
 	local r state arg1 arg2 new_lines= added=()
@@ -98,7 +135,7 @@ do_add() {
 location = ${REPOS_BASE//\\/\\\\}/${r//\\/\\\\}\\
 sync-type = ${arg1//\\/\\\\}\\
 sync-uri = ${arg2//\\/\\\\}"
-	done < <(run_helper remote-metadata "${@}")
+	done < <(run_helper remote-metadata "${repos[@]}")
 
 	if [[ ${added[@]} ]]; then
 		local f
@@ -131,12 +168,13 @@ describe_delete() {
 }
 
 describe_delete_parameters() {
-	echo "[-f] <name>..."
+	echo "[-f] (<name>|<index>)..."
 }
 
 describe_delete_options() {
-	echo "-f        : Force potentially dangerous removals"
-	echo "<name>... : Names of repositories to delete"
+	echo "-f         : Force potentially dangerous removals"
+	echo "<name>...  : Names of repositories to delete"
+	echo "<index>... : Numeric index of the repository (from 'list' command)"
 }
 
 do_delete() {
@@ -147,6 +185,7 @@ do_delete() {
 	fi
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	convert_indices "${@}"
 	update_cache
 
 	local r state path removed=()
@@ -177,7 +216,7 @@ do_delete() {
 		fi
 
 		removed+=( "${r}" )
-	done < <(run_helper metadata "${@}")
+	done < <(run_helper metadata "${repos[@]}")
 
 	if [[ ${removed[@]} ]]; then
 		local expr='\('
