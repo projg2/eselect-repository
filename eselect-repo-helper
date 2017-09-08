@@ -93,7 +93,7 @@ def make_configparser(path):
     cfgp = configparser.ConfigParser(interpolation=None)
     if os.path.isdir(path):
         paths = [os.path.join(path, x) for x in os.listdir(path)
-                 if not x.startswith('.')]
+                 if not x.startswith('.') and not x.endswith('~')]
     else:
         paths = [path]
     # monkey-patch our path list in

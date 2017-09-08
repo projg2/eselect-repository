@@ -124,6 +124,7 @@ remove_from_repos_conf() {
 	if [[ -d ${REPOS_CONF} ]]; then
 		# filter only to files containing the repos
 		while IFS= read -r -d '' f; do
+			[[ ${f} == *~ ]] && continue
 			files+=( "${f}" )
 		done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
 	else
