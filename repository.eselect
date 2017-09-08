@@ -164,11 +164,89 @@ ${new_lines}" "${f}" || die
 }
 ## }}}
 
+### disable action
+
+## {{{
+describe_disable() {
+	echo "Disable specified repositories without removing their contents"
+}
+
+describe_disable_parameters() {
+	echo "[-f] (<name>|<index>)..."
+}
+
+describe_disable_options() {
+	echo "-f         : Force potentially dangerous removals"
+	echo "<name>...  : Names of repositories to disable"
+	echo "<index>... : Numeric index of the repository (from 'list' command)"
+}
+
+do_disable() {
+	local force
+	if [[ ${1} == -f ]]; then
+		force=1
+		shift
+	fi
+	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
+
+	convert_indices "${@}"
+	update_cache
+
+	local r state path removed=()
+	while read r state path; do
+		case ${state} in
+			not-exist)
+				echo "error: ${r}: repository not in repos.conf"
+				continue
+				;;
+			local)
+				if [[ ! ${force} ]]; then
+					echo "error: ${r}: repository not in remote list, pass -f to force disabling"
+					continue
+				fi
+				;;
+			no-sync-uri)
+				if [[ ! ${force} ]]; then
+					echo "error: ${r}: repository has no sync-uri, pass -f to force disabling"
+					continue
+				fi
+				;;
+		esac
+
+		removed+=( "${r}" )
+	done < <(run_helper metadata "${repos[@]}")
+
+	if [[ ${removed[@]} ]]; then
+		local expr='\('
+		for r in "${removed[@]}"; do
+			expr+="${r}\|"
+		done
+		expr="${expr%|})"
+
+		local files=()
+		if [[ -d ${REPOS_CONF} ]]; then
+			# filter only to files containing the repos
+			while IFS= read -r -d '' f; do
+				files+=( "${f}" )
+			done < <(grep -Z -l "^\s*\[${expr}\]\s*\$" "${REPOS_CONF}"/*)
+		else
+			files=( "${REPOS_CONF}" )
+		fi
+
+		echo "Updating repos.conf ..."
+		sed -n -i~ -e "/^\s*\[${expr}\]\s*\$/{b loop}; p; b;
+				:loop {n;/^\s*[^\[]/b loop};" "${files[@]}" || die
+
+		echo "${#removed[@]} repositories disabled"
+	fi
+}
+## }}}
+
 ### delete action
 
 ## {{{
 describe_delete() {
-	echo "Remove installed repository"
+	echo "Remove installed repositories along with their contents"
 }
 
 describe_delete_parameters() {
