@@ -40,7 +40,7 @@ update_cache() {
 	# (If-Modified-Since will work with the current mtime anyway, unless
 	# user's clock has drifted seriously)
 	wget -N --no-use-server-timestamps -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
-		die "Unable to fetch repositories.xml"
+		die -q "unable to fetch repositories.xml"
 }
 
 run_helper() {
@@ -48,7 +48,7 @@ run_helper() {
 		--repos-conf "${REPOS_CONF}" \
 		--repositories-xml "${REMOTE_LIST_CACHE}" \
 		"${@}" ||
-		die "Helper failed to run"
+		die -q "helper failed to run"
 }
 
 ### add action
