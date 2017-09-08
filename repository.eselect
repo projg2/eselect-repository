@@ -36,11 +36,15 @@ update_cache() {
 		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
 	fi
 
-	# do not force server timestamps as they will cause immediate rechecks
+	wget -N -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
+		die -q "unable to fetch repositories.xml"
+	# we need to touch it since:
+	# a. wget defaults to using server timestamp,
+	# b. wget does not update the timestamp if the file did not change
+	# on the server.
 	# (If-Modified-Since will work with the current mtime anyway, unless
 	# user's clock has drifted seriously)
-	wget -N --no-use-server-timestamps -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
-		die -q "unable to fetch repositories.xml"
+	touch "${REMOTE_LIST_CACHE}"
 }
 
 run_helper() {
