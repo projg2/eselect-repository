@@ -90,23 +90,23 @@ convert_indices() {
 	done
 }
 
-### add action
+### enable action
 
 ## {{{
-describe_add() {
-	echo "Add a new repository"
+describe_enable() {
+	echo "Enable the specified repositories from the list"
 }
 
-describe_add_parameters() {
+describe_enable_parameters() {
 	echo "(<name>|<index>)..."
 }
 
-describe_add_options() {
-	echo "<name>...  : Names of repositories to add"
+describe_enable_options() {
+	echo "<name>...  : Names of repositories to enable"
 	echo "<index>... : Numeric index of the repository (from 'list' command)"
 }
 
-do_add() {
+do_enable() {
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
 	convert_indices "${@}"
@@ -159,7 +159,7 @@ sync-uri = ${arg2//\\/\\\\}"
 		sed -i -e "\$ a\\
 ${new_lines}" "${f}" || die
 
-		echo "${#added[@]} repositories added"
+		echo "${#added[@]} repositories enabled"
 	fi
 }
 ## }}}
