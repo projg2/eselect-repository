@@ -242,24 +242,24 @@ do_disable() {
 }
 ## }}}
 
-### delete action
+### remove action
 
 ## {{{
-describe_delete() {
+describe_remove() {
 	echo "Remove installed repositories along with their contents"
 }
 
-describe_delete_parameters() {
+describe_remove_parameters() {
 	echo "[-f] (<name>|<index>)..."
 }
 
-describe_delete_options() {
+describe_remove_options() {
 	echo "-f         : Force potentially dangerous removals"
-	echo "<name>...  : Names of repositories to delete"
+	echo "<name>...  : Names of repositories to remove"
 	echo "<index>... : Numeric index of the repository (from 'list' command)"
 }
 
-do_delete() {
+do_remove() {
 	local force
 	if [[ ${1} == -f ]]; then
 		force=1
