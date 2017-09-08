@@ -90,6 +90,28 @@ convert_indices() {
 	done
 }
 
+# Add the specified lines (${1}) to repos.conf file.
+add_to_repos_conf() {
+	local new_lines=${1}
+
+	local f
+	# if repos.conf is a directory, create a dedicated subfile
+	if [[ -d ${REPOS_CONF} ]]; then
+		f=${REPOS_CONF_SUBFILE}
+	else
+		f=${REPOS_CONF}
+	fi
+
+	# note: the file must be non-empty for sed to work
+	if [[ ! -s ${f} ]]; then
+		echo "# created by eselect-repo" > "${f}" || die
+	fi
+
+	echo "Updating ${f} ..."
+	sed -i -e "\$ a\\
+${new_lines}" "${f}" || die
+}
+
 ### add action
 
 ## {{{
@@ -131,22 +153,7 @@ location = ${REPOS_BASE//\\/\\\\}/${name//\\/\\\\}\\
 sync-type = ${sync_type//\\/\\\\}\\
 sync-uri = ${sync_uri//\\/\\\\}"
 
-	local f
-	# if repos.conf is a directory, create a dedicated subfile
-	if [[ -d ${REPOS_CONF} ]]; then
-		f=${REPOS_CONF_SUBFILE}
-	else
-		f=${REPOS_CONF}
-	fi
-
-	# note: the file must be non-empty for sed to work
-	if [[ ! -s ${f} ]]; then
-		echo "# created by eselect-repo" > "${f}" || die
-	fi
-
-	echo "Updating ${f} ..."
-	sed -i -e "\$ a\\
-${new_lines}" "${f}" || die
+	add_to_repos_conf "${new_lines}"
 
 	echo "Repository ${name} added"
 }
@@ -204,22 +211,7 @@ sync-uri = ${arg2//\\/\\\\}"
 	done < <(run_helper remote-metadata "${repos[@]}")
 
 	if [[ ${added[@]} ]]; then
-		local f
-		# if repos.conf is a directory, create a dedicated subfile
-		if [[ -d ${REPOS_CONF} ]]; then
-			f=${REPOS_CONF_SUBFILE}
-		else
-			f=${REPOS_CONF}
-		fi
-
-		# note: the file must be non-empty for sed to work
-		if [[ ! -s ${f} ]]; then
-			echo "# created by eselect-repo" > "${f}" || die
-		fi
-
-		echo "Updating ${f} ..."
-		sed -i -e "\$ a\\
-${new_lines}" "${f}" || die
+		add_to_repos_conf "${new_lines}"
 
 		echo "${#added[@]} repositories enabled"
 	fi
