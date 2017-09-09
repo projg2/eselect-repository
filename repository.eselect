@@ -11,7 +11,7 @@ VERSION=0
 CACHEDIR=/tmp
 SYSCONFDIR=/etc
 SHAREDSTATEDIR=/var
-HELPER=./eselect-repo-helper
+HELPER="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/eselect-repo-helper"
 
 ### configuration
 # TODO: make this configurable
