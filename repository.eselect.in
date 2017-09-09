@@ -1,6 +1,8 @@
 # Copyright (c) 2017 Michał Górny
 # 2-clause BSD license
 
+inherit config
+
 DESCRIPTION="Manage repository list in repos.conf"
 MAINTAINER="Michał Górny <mgorny@gentoo.org>"
 VERSION=0
@@ -11,21 +13,32 @@ CACHEDIR=/tmp
 SYSCONFDIR=/etc
 SHAREDSTATEDIR=/var
 HELPER="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/eselect-repo-helper"
-
-### configuration
-# TODO: make this configurable
-
-REPOS_CONF=${SYSCONFDIR}/portage/repos.conf
-# if repos.conf is a directory
-REPOS_CONF_SUBFILE=${REPOS_CONF}/eselect-repo.conf
-REPOS_BASE=${SHAREDSTATEDIR}/db/repos
-
-REMOTE_LIST_URI=https://qa-reports.gentoo.org/output/repos/repositories.xml
-REMOTE_LIST_CACHE=${CACHEDIR}/repositories.xml
-# every 2 hours -- mostly to avoid wget output on every command
-REMOTE_LIST_REFRESH=$(( 2 * 3600 ))
+CONFIG="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/eselect-repo.conf"
 
 ### helper functions
+
+# Load all the configuration variables.
+get_config() {
+	local v vars=(
+		REPOS_CONF REPOS_CONF_SUBFILE REPOS_BASE
+		REMOTE_LIST_URI REMOTE_LIST_CACHEDIR REMOTE_LIST_REFRESH
+	)
+
+	for v in "${vars[@]}"; do
+		declare -g "${v}=$(load_config "${CONFIG}" "${v}")"
+		[[ -n ${!v} ]] ||
+			die "${v} not set by the configuration file (${CONFIG})"
+	done
+
+	[[ -e ${REPOS_CONF} ]] ||
+		die "${REPOS_CONF} does not exist; wrong path?"
+	# try to create it if necessary
+	[[ -d ${REMOTE_LIST_CACHEDIR} ]] ||
+		mkdir -p "${REMOTE_LIST_CACHEDIR}" || die
+	# it always has to end with /repositories.xml, so we only make
+	# the directory configurable
+	REMOTE_LIST_CACHE=${REMOTE_LIST_CACHEDIR}/repositories.xml
+}
 
 update_cache() {
 	local refts
@@ -35,7 +48,7 @@ update_cache() {
 		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
 	fi
 
-	wget -N -P "${CACHEDIR}" "${REMOTE_LIST_URI}" ||
+	wget -N -P "${REMOTE_LIST_CACHEDIR}" "${REMOTE_LIST_URI}" ||
 		die -q "unable to fetch repositories.xml"
 	# we need to touch it since:
 	# a. wget defaults to using server timestamp,
@@ -159,6 +172,8 @@ do_add() {
 	local sync_type=${2}
 	local sync_uri=${3}
 
+	get_config
+
 	local r state arg1 arg2
 	while read r state arg1 arg2; do
 		case ${state} in
@@ -201,6 +216,7 @@ describe_enable_options() {
 do_enable() {
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	get_config
 	convert_indices "${@}"
 	update_cache
 
@@ -266,6 +282,7 @@ do_disable() {
 	fi
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	get_config
 	convert_indices "${@}"
 	update_cache
 
@@ -325,6 +342,7 @@ do_remove() {
 	fi
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	get_config
 	convert_indices "${@}"
 	update_cache
 
@@ -373,6 +391,7 @@ describe_list() {
 }
 
 do_list() {
+	get_config
 	update_cache
 
 	write_list_start "Available repositories:"
