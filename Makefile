@@ -39,6 +39,6 @@ install: repository.eselect
 	install -d $(DESTDIR)$(ESELECTDIR)
 	install -m0644 repository.eselect $(DESTDIR)$(ESELECTDIR)/
 	install -d $(DESTDIR)$(CONFIGDIR)
-	install -m0644 repository.eselect $(DESTDIR)$(CONFIG)
+	install -m0644 eselect-repo.conf $(DESTDIR)$(CONFIG)
 
 .PHONY: all clean install
