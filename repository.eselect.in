@@ -6,7 +6,6 @@ MAINTAINER="Michał Górny <mgorny@gentoo.org>"
 VERSION=0
 
 ### directories
-# TODO: use substitution on this
 
 CACHEDIR=/tmp
 SYSCONFDIR=/etc
