@@ -5,7 +5,7 @@ inherit config
 
 DESCRIPTION="Manage repository list in repos.conf"
 MAINTAINER="Michał Górny <mgorny@gentoo.org>"
-VERSION=0
+VERSION=1
 
 ### directories
 
