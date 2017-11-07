@@ -390,12 +390,24 @@ describe_list() {
 	echo "List all repositories"
 }
 
+describe_list_parameters() {
+	echo "[-I]"
+}
+
+describe_list_options() {
+	echo "-I         : Only list installed"
+}
+
 do_list() {
 	get_config
 	update_cache
 
 	write_list_start "Available repositories:"
 	local name state i=1
+	local only_installed
+	if [[ ${1} == -I ]]; then
+		only_installed=1
+	fi
 	while read name state; do
 		case ${state} in
 			enabled)
@@ -405,6 +417,12 @@ do_list() {
 					name+=" $(highlight_warning '#')"
 				fi
 				;;
+			*)
+				if [[ -n ${only_installed} ]]; then
+					i=$(( i + 1 ))
+					continue
+				fi
+			;;
 		esac
 		write_numbered_list_entry "$(( i++ ))" "${name}"
 	done < <(run_helper list)
