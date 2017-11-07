@@ -390,7 +390,20 @@ describe_list() {
 	echo "List all repositories"
 }
 
+describe_list_parameters() {
+	echo "[-i]"
+}
+
+describe_list_options() {
+	echo "-i         : Only list installed"
+}
+
 do_list() {
+	local only_installed
+	if [[ ${1} == -i ]]; then
+		only_installed=1
+		shift
+	fi
 	get_config
 	update_cache
 
@@ -405,6 +418,12 @@ do_list() {
 					name+=" $(highlight_warning '#')"
 				fi
 				;;
+			*)
+				if [[ -n ${only_installed} ]]; then
+					(( i++ ))
+					continue
+				fi
+			;;
 		esac
 		write_numbered_list_entry "$(( i++ ))" "${name}"
 	done < <(run_helper list)
