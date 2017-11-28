@@ -420,7 +420,7 @@ do_list() {
 				;;
 			*)
 				if [[ -n ${only_installed} ]]; then
-					: $(( i++ ))
+					(( i++ ))
 					continue
 				fi
 			;;
