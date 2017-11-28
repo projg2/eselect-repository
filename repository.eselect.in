@@ -391,23 +391,24 @@ describe_list() {
 }
 
 describe_list_parameters() {
-	echo "[-I]"
+	echo "[-i]"
 }
 
 describe_list_options() {
-	echo "-I         : Only list installed"
+	echo "-i         : Only list installed"
 }
 
 do_list() {
+	local only_installed
+	if [[ ${1} == -i ]]; then
+		only_installed=1
+		shift
+	fi
 	get_config
 	update_cache
 
 	write_list_start "Available repositories:"
 	local name state i=1
-	local only_installed
-	if [[ ${1} == -I ]]; then
-		only_installed=1
-	fi
 	while read name state; do
 		case ${state} in
 			enabled)
