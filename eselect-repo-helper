@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim:se fileencoding=utf8 :
-# Copyright (c) 2017 Michał Górny
+# Copyright (c) 2017-2018 Michał Górny
 # 2-clause BSD license
 
 # This is a Python helper script for eselect-repo that wraps routines
@@ -33,7 +33,7 @@ def transform_source(source_el, repo_name):
 
 
 def do_list(args):
-    for r in sorted(args.repositories_xml.getroot(),
+    for r in sorted(args.repositories_xml.getroot().findall('repo'),
                     key=lambda x: locale.strxfrm(x.findtext('name'))):
         name = r.findtext('name')
         uris = [transform_source(s, name) for s in r.findall('source')]
@@ -50,7 +50,8 @@ def do_list(args):
 
 
 def do_metadata(args):
-    all_repos = set(x.findtext('name') for x in args.repositories_xml.getroot())
+    all_repos = set(x.findtext('name')
+            for x in args.repositories_xml.getroot().findall('repo'))
 
     for r in args.repo:
         if r not in args.repos_conf:
@@ -68,7 +69,8 @@ def do_metadata(args):
 
 
 def do_remote_metadata(args):
-    all_repos = dict((x.findtext('name'), x) for x in args.repositories_xml.getroot())
+    all_repos = dict((x.findtext('name'), x)
+            for x in args.repositories_xml.getroot().findall('repo'))
 
     for r in args.repo:
         if r in args.repos_conf:
