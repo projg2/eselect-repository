@@ -20,7 +20,7 @@ CONFIG="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/eselect-repo.conf"
 # Load all the configuration variables.
 get_config() {
 	local v vars=(
-		REPOS_CONF REPOS_CONF_SUBFILE REPOS_BASE
+		REPOS_CONF REPOS_BASE
 		REMOTE_LIST_URI REMOTE_LIST_CACHEDIR REMOTE_LIST_REFRESH
 	)
 
@@ -106,13 +106,15 @@ convert_indices() {
 # ${1} specifies the repository name.
 # ${2} specifies the lines to append.
 add_to_repos_conf() {
-	local repository=${1}
+	local -x repository=${1}
 	local new_lines=${2}
 
 	local f
 	# if repos.conf is a directory, create a dedicated subfile
 	if [[ -d ${REPOS_CONF} ]]; then
-		f=${REPOS_CONF_SUBFILE}
+		f=$(load_config "${CONFIG}" "REPOS_CONF_SUBFILE")
+		[[ -n ${f} ]] ||
+			die "REPOS_CONF_SUBFILE not set by the configuration file (${CONFIG})"
 	else
 		f=${REPOS_CONF}
 	fi
