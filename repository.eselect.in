@@ -102,9 +102,12 @@ convert_indices() {
 	done
 }
 
-# Add the specified lines (${1}) to repos.conf file.
+# Add the specified repository to repos.conf file.
+# ${1} specifies the repository name.
+# ${2} specifies the lines to append.
 add_to_repos_conf() {
-	local new_lines=${1}
+	local repository=${1}
+	local new_lines=${2}
 
 	local f
 	# if repos.conf is a directory, create a dedicated subfile
@@ -119,7 +122,7 @@ add_to_repos_conf() {
 		echo "# created by eselect-repo" > "${f}" || die
 	fi
 
-	echo "Updating ${f} ..."
+	echo "Adding ${repository} to ${f} ..."
 	sed -i -e "\$ a\\
 ${new_lines}" "${f}" || die
 }
@@ -185,13 +188,13 @@ do_add() {
 
 	# note: escape all the backslashes for sed, and add command
 	# continuations
-	new_lines+="\\
+	local new_lines="\\
 [${name//\\/\\\\}]\\
 location = ${REPOS_BASE//\\/\\\\}/${name//\\/\\\\}\\
 sync-type = ${sync_type//\\/\\\\}\\
 sync-uri = ${sync_uri//\\/\\\\}"
 
-	add_to_repos_conf "${new_lines}"
+	add_to_repos_conf "${name}" "${new_lines}"
 
 	echo "Repository ${name} added"
 }
@@ -220,7 +223,7 @@ do_enable() {
 	convert_indices "${@}"
 	update_cache
 
-	local r state arg1 arg2 new_lines= added=()
+	local r state arg1 arg2 added=()
 	while read r state arg1 arg2; do
 		case ${state} in
 			enabled)
@@ -239,19 +242,19 @@ do_enable() {
 		esac
 
 		added+=( "${r}" )
+
 		# note: escape all the backslashes for sed, and add command
 		# continuations
-		new_lines+="\\${new_lines:+
+		local new_lines="\\${new_lines:+
 \\}
 [${r//\\/\\\\}]\\
 location = ${REPOS_BASE//\\/\\\\}/${r//\\/\\\\}\\
 sync-type = ${arg1//\\/\\\\}\\
 sync-uri = ${arg2//\\/\\\\}"
+		add_to_repos_conf "${r}" "${new_lines}"
 	done < <(run_helper remote-metadata "${repos[@]}")
 
 	if [[ ${added[@]} ]]; then
-		add_to_repos_conf "${new_lines}"
-
 		echo "${#added[@]} repositories enabled"
 	fi
 }
