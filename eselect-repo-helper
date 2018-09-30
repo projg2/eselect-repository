@@ -33,8 +33,8 @@ def transform_source(source_el, repo_name):
 
 
 def do_list(args):
-    for r in sorted(args.repositories_xml.getroot().findall('repo'),
-                    key=lambda x: locale.strxfrm(x.findtext('name'))):
+    repos = {}
+    for r in args.repositories_xml.getroot().findall('repo'):
         name = r.findtext('name')
         uris = [transform_source(s, name) for s in r.findall('source')]
         if name in args.repos_conf:
@@ -46,6 +46,14 @@ def do_list(args):
                 status = 'need-update'
         else:
             status = 'disabled'
+        repos[name] = status
+
+    for name in args.repos_conf:
+        if name != 'DEFAULT' and name not in repos:
+            repos[name] = 'local'
+
+    for name, status in sorted(repos.items(),
+                               key=lambda kv: locale.strxfrm(kv[0])):
         print('{} {}'.format(name, status))
 
 

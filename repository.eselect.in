@@ -423,6 +423,8 @@ do_list() {
 					name+=" $(highlight_warning '#')"
 				fi
 				;;
+			local)
+				name+=" $(highlight_warning '@')";;
 			*)
 				if [[ -n ${only_installed} ]]; then
 					(( i++ ))
