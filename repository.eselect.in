@@ -178,6 +178,7 @@ do_add() {
 	local sync_uri=${3}
 
 	get_config
+	update_cache
 
 	local r state arg1 arg2
 	while read r state arg1 arg2; do
