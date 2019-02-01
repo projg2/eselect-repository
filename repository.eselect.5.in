@@ -1,0 +1,188 @@
+.\" -*- coding: utf-8 -*-
+.\" Copyright 2019 Till Schäfer
+.\" Distributed under the terms of the 2-clause BSD license
+.\"
+.TH repository.eselect 5 "21 February 2019" "Gentoo Linux" "eselect"
+.SH NAME
+\fBrepository.eselect\fP - Manage repos.conf via eselect
+.SH SYNOPSIS
+\fBeselect\fP \fBrepository\fP [\fBhelp\fP|\fBusage\fP|\fBversion\fP]
+.br
+\fBeselect\fP \fBrepository\fP \fBadd\fP \fIname\fP \fIsync-type\fP
+\fIsync-uri\fP
+.br
+\fBeselect\fP \fBrepository\fP \fBdisable\fP [\fB-f\fP]
+(\fIname\fP|\fIindex\fP) ...
+.br
+\fBeselect\fP \fBrepository\fP \fBenable\fP (\fIname\fP|\fIindex\fP) ...
+.br
+\fBeselect\fP \fBrepository\fP \fBlist\fP [\fB-i\fP]
+.br
+\fBeselect\fP \fBrepository\fP \fBremove\fP [\fB-f\fP]
+(\fIname\fP|\fIindex\fP) ...
+
+.SH DESCRIPTION
+\fBrepository.eselect\fP is an eselect module for listing and
+manipulating /etc/portage/repos.conf entries, such as the Gentoo
+repository or third party ebuild repositories (also known as overlays).
+It supports third party ebuild repositories from a remote list (such as
+the officially published list of Gentoo) as well as custom repositories.
+Synchronization of the the repositories is handled by the package
+manager.
+.SH ACTION: ADD
+Add a custom repository
+.PP
+\fBeselect\fP \fBrepository\fP \fBadd\fP \fIname\fP \fIsync-type\fP
+\fIsync-uri\fP
+.PP
+Parameters:
+.TP
+.B
+\fIname\fP
+Name of the repository to add
+.TP
+.B
+\fIsync-type\fP
+Syncer to use (e.g. git, rsync, svn\.\.\.)
+.TP
+.B
+\fIsync-uri\fP
+Sync URI
+.SH ACTION: DISABLE
+Disable specified repositories without removing their contents
+.PP
+\fBeselect\fP \fBrepository\fP \fBdisable\fP [\fB-f\fP]
+(\fIname\fP|\fIindex\fP) ...
+.PP
+Parameters:
+.TP
+.B
+\fB-f\fP
+Force potentially dangerous removals that cannot be readded via enable.
+Required for unregistered repositories and those without sync
+attributes.
+.TP
+.B
+\fIname\fP
+Names of repositories to disable
+.TP
+.B
+\fIindex\fP
+Numeric index of the repository (from 'list' command)
+.SH ACTION: ENABLE
+Enable the specified repositories from the list
+.PP
+\fBeselect\fP \fBrepository\fP \fBenable\fP (\fIname\fP|\fIindex\fP) ...
+.PP
+Parameters:
+.TP
+.B
+\fIname\fP
+Names of repositories to enable
+.TP
+.B
+\fIindex\fP
+Numeric index of the repository (from 'list' command)
+.SH ACTION: LIST
+List all repositories. The repositories in the listing are suffixed by a
+symbol, that indicates their current state.
+.PP
+\fBeselect\fP \fBrepository\fP \fBlist\fP [\fB-i\fP]
+.PP
+Parameters:
+.TP
+.B
+\fB-i\fP
+Only list installed
+.PP
+State suffixes:
+.TP
+.B
+*
+Repository is enabled
+.TP
+.B
+#
+Repository's sync information is out of date and needs to be updated
+(via disable/enable) or has been customized
+.TP
+.B
+@
+Repository with a matching name is not listed in the remote list
+.SH ACTION: REMOVE
+Remove installed repositories along with their contents
+.PP
+\fBeselect\fP \fBrepository\fP \fBremove\fP [\fB-f\fP]
+(\fIname\fP|\fIindex\fP) ...
+.PP
+Parameters:
+.TP
+.B
+\fB-f\fP
+Force potentially dangerous removals that cannot be readded via enable.
+Required for unregistered repositories and those without sync
+attributes.
+.TP
+.B
+\fIname\fP
+Names of repositories to remove
+.TP
+.B
+\fIindex\fP
+Numeric index of the repository (from 'list' command)
+
+.SH EXAMPLES
+Listing registered repositories
+.PP
+.nf
+.fam C
+        # eselect repository list
+        Available repositories:
+          [1]   foo
+          [2]   bar
+          [3]   baz
+          [4]   cross #
+          [5]   good *
+          [6]   my_overlay @
+
+.fam T
+.fi
+Add registered repositories
+.PP
+.nf
+.fam C
+        # eselect repository enable foo bar baz
+
+.fam T
+.fi
+Add unregistered repositories
+.PP
+.nf
+.fam C
+        # eselect repository add test git https://github.com/test/test.git
+
+.fam T
+.fi
+Disable repositories without removing contents
+.PP
+.nf
+.fam C
+        # eselect repository disable foo bar baz
+
+.fam T
+.fi
+Disable repositories and remove contents
+.PP
+.nf
+.fam C
+        # eselect repository remove foo bar baz
+
+.fam T
+.fi
+.SH FILES
+.TP
+.B
+/etc/eselect/repository.conf
+Configuration for repository.eselect
+.SH SEE ALSO
+\fBeselect\fP(1), \fBportage\fP(5)
