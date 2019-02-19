@@ -48,7 +48,7 @@ update_cache() {
 		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
 	fi
 
-	wget -N -P "${REMOTE_LIST_CACHEDIR}" "${REMOTE_LIST_URI}" ||
+	wget -O "${REMOTE_LIST_CACHE}" "${REMOTE_LIST_URI}" ||
 		die -q "unable to fetch repositories.xml"
 	# we need to touch it since:
 	# a. wget defaults to using server timestamp,
