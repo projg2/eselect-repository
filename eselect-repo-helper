@@ -46,15 +46,22 @@ def do_list(args):
                 status = 'need-update'
         else:
             status = 'disabled'
-        repos[name] = status
+        repos[name] = {
+            'status': status,
+            'url': r.findtext('homepage'),
+        }
 
     for name in args.repos_conf:
         if name != 'DEFAULT' and name not in repos:
-            repos[name] = 'local'
+            repos[name] = {
+                'status': 'local',
+                'url': '',
+            }
 
-    for name, status in sorted(repos.items(),
+    for name, data in sorted(repos.items(),
                                key=lambda kv: locale.strxfrm(kv[0])):
-        print('{} {}'.format(name, status))
+        print('{} {} {}'.format(name, data['status'],
+            data['url'] or ''))
 
 
 def do_metadata(args):
