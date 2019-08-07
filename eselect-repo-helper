@@ -48,7 +48,7 @@ def do_list(args):
             status = 'disabled'
         repos[name] = {
             'status': status,
-            'url': r.findtext('homepage'),
+            'url': str(r.findtext('homepage')).strip(),
         }
 
     for name in args.repos_conf:
