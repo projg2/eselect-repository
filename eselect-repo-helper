@@ -61,7 +61,7 @@ def do_list(args):
     for name, data in sorted(repos.items(),
                                key=lambda kv: locale.strxfrm(kv[0])):
         print('{} {} {}'.format(name, data['status'],
-            data['url'] or ''))
+            (data['url'] or '').strip()))
 
 
 def do_metadata(args):
