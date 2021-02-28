@@ -1,11 +1,11 @@
-# Copyright (c) 2017-2020 Michał Górny
+# Copyright (c) 2017-2021 Michał Górny
 # 2-clause BSD license
 
 inherit config
 
 DESCRIPTION="Manage repository list in repos.conf"
 MAINTAINER="Michał Górny <mgorny@gentoo.org>"
-VERSION=8
+VERSION=9
 
 ### directories
 
