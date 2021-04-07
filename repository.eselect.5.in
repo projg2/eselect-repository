@@ -35,6 +35,26 @@ Syncer to use (e.g. git, rsync, svn\.\.\.)
 .B
 \fIsync-uri\fP
 Sync URI
+.SH ACTION: CREATE
+Create a local repository, initialize it with some boilerplate and add
+it to repos.conf
+.PP
+\fBeselect\fP \fBrepository\fP \fBcreate\fP \fIname\fP \fI[path]\fP
+.PP
+Parameters:
+.TP
+.B
+\fIname\fP
+Name of the repository to create
+.TP
+.B
+\fIpath\fP
+Directory to create the repository in. If not specified, defaults
+to a subdirectory of storage dir matching \fIname\fP
+.TP
+.B
+\fIsync-uri\fP
+Sync URI
 .SH ACTION: DISABLE
 Disable specified repositories without removing their contents
 .PP

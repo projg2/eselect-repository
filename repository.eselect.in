@@ -203,6 +203,61 @@ sync-uri = ${sync_uri//\\/\\\\}"
 }
 ## }}}
 
+### create action
+
+## {{{
+describe_create() {
+	echo "Create a local repository"
+}
+
+describe_create_parameters() {
+	echo "<name> [<path>]"
+}
+
+describe_create_options() {
+	echo "<name>      : Name of the new repository"
+	echo "<path>      : Path to use (default: \${REPOS_BASE}/<name>)"
+}
+
+do_create() {
+	[[ ${#} -eq 1 || ${#} -eq 2 ]] || die -q "incorrect parameters to create"
+
+	get_config
+	update_cache
+
+	local name=${1}
+	local path=${2:-${REPOS_BASE}/${name}}
+
+	local r state arg1 arg2
+	while read r state arg1 arg2; do
+		case ${state} in
+			enabled)
+				die -q "error: ${r}: repository by that name already exists, in ${arg1}"
+				;;
+		esac
+	done < <(run_helper remote-metadata "${name}")
+
+	# create the repository boilerplate
+	mkdir -p "${path}"/{metadata,profiles} || die
+	echo "${name}" > "${path}"/profiles/repo_name || die
+	cat > "${path}"/metadata/layout.conf <<-EOF || die
+		masters = gentoo
+		thin-manifests = true
+		sign-manifests = false
+	EOF
+
+	# note: escape all the backslashes for sed, and add command
+	# continuations
+	local new_lines="\\
+[${name//\\/\\\\}]\\
+location = ${path//\\/\\\\}"
+
+	add_to_repos_conf "${name}" "${new_lines}"
+
+	echo "Repository ${name} created and added"
+}
+## }}}
+
 ### enable action
 
 ## {{{
