@@ -1,8 +1,9 @@
 .\" -*- coding: utf-8 -*-
 .\" Copyright 2019 Till Schäfer
+.\" Copyright 2021 Michał Górny
 .\" Distributed under the terms of the 2-clause BSD license
 .\"
-.TH repository.eselect 5 "29 May 2019" "Gentoo Linux" "eselect"
+.TH repository.eselect 5 "07 Apr 2021" "Gentoo Linux" "eselect"
 .SH NAME
 \fBrepository.eselect\fP - Manage repos.conf via eselect
 .SH SYNOPSIS
