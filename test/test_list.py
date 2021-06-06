@@ -6,7 +6,8 @@ def test_repos_conf_empty(repositories_xml, repos_conf, runner):
         runner(repositories_xml, repos_conf.name, ['list']) ==
         (0, b'bar disabled https://example.com/bar\n'
             b'foo disabled https://example.com/foo\n'
-            b'no-homepage disabled \n'))
+            b'no-homepage disabled \n'
+            b'weird-source disabled \n'))
 
 
 @pytest.mark.parametrize('uri', ['https://example.com/foo.git',
@@ -24,7 +25,8 @@ sync-uri = {uri}
         runner(repositories_xml, repos_conf.name, ['list']) ==
         (0, b'bar disabled https://example.com/bar\n'
             b'foo enabled https://example.com/foo\n'
-            b'no-homepage disabled \n'))
+            b'no-homepage disabled \n'
+            b'weird-source disabled \n'))
 
 
 @pytest.mark.parametrize('proto,uri',
@@ -45,7 +47,8 @@ sync-uri = {uri}
         runner(repositories_xml, repos_conf.name, ['list']) ==
         (0, b'bar disabled https://example.com/bar\n'
             b'foo need-update https://example.com/foo\n'
-            b'no-homepage disabled \n'))
+            b'no-homepage disabled \n'
+            b'weird-source disabled \n'))
 
 
 def test_repos_conf_no_uri(repositories_xml, repos_conf, runner):
@@ -59,7 +62,8 @@ location = /tmp/foo
         runner(repositories_xml, repos_conf.name, ['list']) ==
         (0, b'bar disabled https://example.com/bar\n'
             b'foo need-update https://example.com/foo\n'
-            b'no-homepage disabled \n'))
+            b'no-homepage disabled \n'
+            b'weird-source disabled \n'))
 
 
 def test_local(repositories_xml, repos_conf, runner):
@@ -76,4 +80,5 @@ sync-uri = https://example.com/frobnicate.git
         (0, b'bar disabled https://example.com/bar\n'
             b'foo disabled https://example.com/foo\n'
             b'frobnicate local \n'
-            b'no-homepage disabled \n'))
+            b'no-homepage disabled \n'
+            b'weird-source disabled \n'))

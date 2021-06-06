@@ -40,6 +40,15 @@ REPOS_XML = b'''<?xml version="1.0" encoding="utf-8"?>
     <source type="git">git@example.com:nohome.git</source>
     <source type="git">https://example.com/nohome.git</source>
   </repo>
+  <repo quality="experimental" status="unofficial">
+    <name>weird-source</name>
+    <description lang="en">this one's got custom syncer</description>
+    <owner type="person">
+      <email>weirdowner@example.com</email>
+      <name>Owner of Weird</name>
+    </owner>
+    <source type="weird-thing">https://example.com/weird-source</source>
+  </repo>
 </repositories>
 '''
 
