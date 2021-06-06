@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim:se fileencoding=utf8 :
-# Copyright (c) 2017-2018 Michał Górny
+# Copyright (c) 2017-2021 Michał Górny
 # 2-clause BSD license
 
 # This is a Python helper script for eselect-repo that wraps routines
@@ -13,6 +13,7 @@ import locale
 import lxml.etree
 import os
 import os.path
+import sys
 import tempfile
 
 
@@ -27,8 +28,8 @@ def transform_source(source_el, repo_name):
     elif stype == 'mercurial':
         return ('hg', suri)
     else:
-        print('warning: {}: unsupported source type {}'.format(
-            repo_name, stype))
+        print(f'warning: {repo_name}: unsupported source type {stype}',
+              file=sys.stderr)
         return None
 
 
