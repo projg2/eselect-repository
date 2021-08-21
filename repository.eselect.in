@@ -30,11 +30,13 @@ get_config() {
 			die "${v} not set by the configuration file (${CONFIG})"
 	done
 
-	[[ -e ${REPOS_CONF} ]] ||
-		die "${REPOS_CONF} does not exist; wrong path?"
+	if [[ ! -e ${REPOS_CONF} ]]; then
+		mkdir -p "${REPOS_CONF}" || die
+	fi
 	# try to create it if necessary
-	[[ -d ${REMOTE_LIST_CACHEDIR} ]] ||
+	if [[ ! -d ${REMOTE_LIST_CACHEDIR} ]]; then
 		mkdir -p "${REMOTE_LIST_CACHEDIR}" || die
+	fi
 	# it always has to end with /repositories.xml, so we only make
 	# the directory configurable
 	REMOTE_LIST_CACHE=${REMOTE_LIST_CACHEDIR}/repositories.xml
