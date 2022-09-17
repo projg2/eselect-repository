@@ -62,7 +62,7 @@ location = /tmp/foo
     assert (
         runner(repositories_xml, repos_conf.name, ['list']) ==
         (0, b'bar disabled https://example.com/bar\n'
-            b'foo need-update https://example.com/foo\n'
+            b'foo local \n'
             b'no-homepage disabled \n'
             b'weird-source disabled \n'))
 

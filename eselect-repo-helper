@@ -51,8 +51,8 @@ def do_list(args):
             'url': r.findtext('homepage'),
         }
 
-    for name in args.repos_conf:
-        if name != 'DEFAULT' and name not in repos:
+    for name, data in args.repos_conf.items():
+        if name != 'DEFAULT' and (name not in repos or 'sync-uri' not in data):
             repos[name] = {
                 'status': 'local',
                 'url': '',
