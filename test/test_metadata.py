@@ -1,5 +1,5 @@
 def test_metadata(repositories_xml, repos_conf, runner):
-    repos_conf.write(f'''
+    repos_conf.write('''
 [foo]
 location = /tmp/foo
 

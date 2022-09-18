@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # vim:se fileencoding=utf8 :
-# Copyright (c) 2017-2021 Michał Górny
+# Copyright (c) 2017-2022 Michał Górny
 # 2-clause BSD license
 
 # This is a Python helper script for eselect-repo that wraps routines
@@ -14,7 +14,6 @@ import lxml.etree
 import os
 import os.path
 import sys
-import tempfile
 
 
 def transform_source(source_el, repo_name):
@@ -60,14 +59,15 @@ def do_list(args):
             }
 
     for name, data in sorted(repos.items(),
-                               key=lambda kv: locale.strxfrm(kv[0])):
+                             key=lambda kv: locale.strxfrm(kv[0])):
         print('{} {} {}'.format(name, data['status'],
-            (data['url'] or '').strip()))
+                                (data['url'] or '').strip()))
 
 
 def do_metadata(args):
-    all_repos = set(x.findtext('name')
-            for x in args.repositories_xml.getroot().findall('repo'))
+    all_repos = set(
+        x.findtext('name')
+        for x in args.repositories_xml.getroot().findall('repo'))
 
     for r in args.repo:
         if r not in args.repos_conf:
@@ -85,12 +85,14 @@ def do_metadata(args):
 
 
 def do_remote_metadata(args):
-    all_repos = dict((x.findtext('name'), x)
-            for x in args.repositories_xml.getroot().findall('repo'))
+    all_repos = dict(
+        (x.findtext('name'), x)
+        for x in args.repositories_xml.getroot().findall('repo'))
 
     for r in args.repo:
         if r in args.repos_conf:
-            print('{} enabled {}'.format(r, args.repos_conf[r].get('location', '')))
+            print('{} enabled {}'
+                  .format(r, args.repos_conf[r].get('location', '')))
             continue
         if r not in all_repos:
             print('{} not-exist'.format(r))
@@ -127,25 +129,25 @@ def main():
 
     paths = p.add_argument_group('paths')
     paths.add_argument('--repos-conf', required=True,
-            type=make_configparser,
-            help='Location of repos.conf file')
+                       type=make_configparser,
+                       help='Location of repos.conf file')
     paths.add_argument('--repositories-xml', required=True,
-            type=lxml.etree.parse,
-            help='Location of repositories.xml file')
+                       type=lxml.etree.parse,
+                       help='Location of repositories.xml file')
 
     actions = p.add_subparsers(title='actions', dest='action')
     actions.add_parser('list',
-            help='List of remote & local repositories')
+                       help='List of remote & local repositories')
 
-    metadata_action = actions.add_parser('metadata',
-            help='Print metadata for given repos')
+    metadata_action = actions.add_parser(
+        'metadata', help='Print metadata for given repos')
     metadata_action.add_argument('repo', nargs='+',
-            help='Repository to print metadata for')
+                                 help='Repository to print metadata for')
 
-    metadata_action = actions.add_parser('remote-metadata',
-            help='Print metadata for given remote repos')
+    metadata_action = actions.add_parser(
+        'remote-metadata', help='Print metadata for given remote repos')
     metadata_action.add_argument('repo', nargs='+',
-            help='Repository to print metadata for')
+                                 help='Repository to print metadata for')
 
     args = p.parse_args()
 
@@ -156,7 +158,7 @@ def main():
     elif args.action == 'remote-metadata':
         do_remote_metadata(args)
     else:
-        raise NotImplementedError('Action {} not implemented'.format(args.action))
+        raise NotImplementedError(f'Action {args.action} not implemented')
 
 
 if __name__ == '__main__':

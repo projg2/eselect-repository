@@ -1,5 +1,5 @@
 def test_remote_metadata(repositories_xml, repos_conf, runner):
-    repos_conf.write(f'''
+    repos_conf.write('''
 [foo]
 location = /tmp/foo
 
@@ -17,4 +17,3 @@ location = /tmp/frobnicate
             b'frobnicate enabled /tmp/frobnicate\n'
             b'noexist not-exist\n'
             b'weird-source unsupported\n'))
-

@@ -29,7 +29,8 @@ sync-uri = {uri}
             b'weird-source disabled \n'))
 
 
-@pytest.mark.parametrize('proto,uri',
+@pytest.mark.parametrize(
+    'proto,uri',
     [('git', 'https://example.com/bar.git'),
      ('hg', 'https://example.com/foo.git'),
      ])
@@ -52,7 +53,7 @@ sync-uri = {uri}
 
 
 def test_repos_conf_no_uri(repositories_xml, repos_conf, runner):
-    repos_conf.write(f'''
+    repos_conf.write('''
 [foo]
 location = /tmp/foo
 ''')
@@ -67,7 +68,7 @@ location = /tmp/foo
 
 
 def test_local(repositories_xml, repos_conf, runner):
-    repos_conf.write(f'''
+    repos_conf.write('''
 [frobnicate]
 location = /tmp/frobnicate
 sync-type = git
