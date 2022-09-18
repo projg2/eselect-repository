@@ -60,8 +60,7 @@ def do_list(args):
 
     for name, data in sorted(repos.items(),
                              key=lambda kv: locale.strxfrm(kv[0])):
-        print('{} {} {}'.format(name, data['status'],
-                                (data['url'] or '').strip()))
+        print(f"{name} {data['status']} {(data['url'] or '').strip()}")
 
 
 def do_metadata(args):
@@ -71,7 +70,7 @@ def do_metadata(args):
 
     for r in args.repo:
         if r not in args.repos_conf:
-            print('{} not-exist'.format(r))
+            print(f"{r} not-exist")
             continue
 
         if r not in all_repos:
@@ -81,7 +80,7 @@ def do_metadata(args):
         else:
             state = 'remote'
         local_path = args.repos_conf[r].get('location', '')
-        print('{} {} {}'.format(r, state, local_path))
+        print(f"{r} {state} {local_path}")
 
 
 def do_remote_metadata(args):
@@ -91,11 +90,10 @@ def do_remote_metadata(args):
 
     for r in args.repo:
         if r in args.repos_conf:
-            print('{} enabled {}'
-                  .format(r, args.repos_conf[r].get('location', '')))
+            print(f"{r} enabled {args.repos_conf[r].get('location', '')}")
             continue
         if r not in all_repos:
-            print('{} not-exist'.format(r))
+            print(f"{r} not-exist")
             continue
 
         sources = all_repos[r].findall('source')
@@ -104,10 +102,10 @@ def do_remote_metadata(args):
             if sync_data is not None:
                 break
         else:
-            print('{} unsupported'.format(r))
+            print(f"{r} unsupported")
             continue
 
-        print('{} remote {} {}'.format(r, sync_data[0], sync_data[1]))
+        print(f"{r} remote {sync_data[0]} {sync_data[1]}")
 
 
 def make_configparser(path):
