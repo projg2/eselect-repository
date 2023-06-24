@@ -315,7 +315,11 @@ sync-uri = ${arg2//\\/\\\\}"
 	done < <(run_helper remote-metadata "${repos[@]}")
 
 	if [[ ${added[@]} ]]; then
-		echo "${#added[@]} repositories enabled"
+		if [[ ${#added[@]} -eq 1 ]]; then
+			echo "1 repository enabled"
+		else
+			echo "${#added[@]} repositories enabled"
+		fi
 	fi
 }
 ## }}}
@@ -375,7 +379,11 @@ do_disable() {
 
 	if [[ ${removed[@]} ]]; then
 		remove_from_repos_conf "${removed[@]}"
-		echo "${#removed[@]} repositories disabled"
+		if [[ ${#removed[@]} -eq 1 ]]; then
+			echo "1 repository disabled"
+		else
+			echo "${#removed[@]} repositories disabled"
+		fi
 	fi
 }
 ## }}}
@@ -441,7 +449,11 @@ do_remove() {
 
 	if [[ ${removed[@]} ]]; then
 		remove_from_repos_conf "${removed[@]}"
-		echo "${#removed[@]} repositories removed"
+		if [[ ${#removed[@]} -eq 1 ]]; then
+			echo "1 repository removed"
+		else
+			echo "${#removed[@]} repositories removed"
+		fi
 	fi
 }
 ## }}}
