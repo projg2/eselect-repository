@@ -131,6 +131,43 @@ add_to_repos_conf() {
 ${new_lines}" "${f}" || die
 }
 
+sync_repo_and_add_dependent_repos() {
+	local repo="${1}"
+
+	emaint sync -r ${repo} || die "Could not sync repository \"${repo}\""
+
+	local repo_dir="${REPOS_BASE}/${repo}"
+	local layout_conf="${repo_dir}/metadata/layout.conf"
+
+	if [[ ! -f "${layout_conf}" ]]; then
+		echo "${repo} has no layout.conf"
+		return
+	fi
+
+	if [[ ! -v available_repos ]]; then
+		# TODO: provide proper eroot to portageq?
+		local -x available_repos=$(portageq get_repos / || die -q "Could not query currently installed repos")
+		echo "available_repos=$available_repos"
+	fi
+
+	#local dependent_repos=$(run_helper repo-masters "${layout_conf}")
+	local dependent_repos=$(grep masters "${layout_conf}" | awk -F= '{print $2}')
+
+	local dependent_repo
+	for dependent_repo in ${dependent_repos[@]}; do
+		if has "${dependent_repo}" ${available_repos}; then
+			continue
+		fi
+
+		if [[ ${add_recursive} == "ask" ]]; then
+			die "TODO: not implemented yet"
+		fi
+
+		# TODO: call do_enable with --add-recursive=${add_recursive} once the optino exists.
+		do_enable "${dependent_repo}" || die "Could not add dependent repository \"${dependent_repo}\""
+	done
+}
+
 # Remove the specified repositories (${@}) from repos.conf file.
 remove_from_repos_conf() {
 	local expr='\('
@@ -179,6 +216,9 @@ do_add() {
 	local sync_type=${2}
 	local sync_uri=${3}
 
+	# TODO: make command line option. one of auto, ask, false.
+	local -x add_recursive="auto"
+
 	get_config
 	update_cache
 
@@ -201,7 +241,11 @@ sync-uri = ${sync_uri//\\/\\\\}"
 
 	add_to_repos_conf "${name}" "${new_lines}"
 
-	echo "Repository ${name} added"
+	if [[ "${add_recursive}" != false ]]; then
+		sync_repo_and_add_dependent_repos "${name}"
+	fi
+
+	echo "Repository ${name} added and synced"
 }
 ## }}}
 
@@ -279,6 +323,9 @@ describe_enable_options() {
 do_enable() {
 	[[ ${#} -gt 0 ]] || die -q "no repositories specified"
 
+	# TODO: make command line option. one of auto, ask, false.
+	local -x add_recursive="auto"
+
 	get_config
 	convert_indices "${@}"
 	update_cache
@@ -312,6 +359,11 @@ location = ${REPOS_BASE//\\/\\\\}/${r//\\/\\\\}\\
 sync-type = ${arg1//\\/\\\\}\\
 sync-uri = ${arg2//\\/\\\\}"
 		add_to_repos_conf "${r}" "${new_lines}"
+
+		if [[ "${add_recursive}" != false ]]; then
+			sync_repo_and_add_dependent_repos "${r}"
+		fi
+
 	done < <(run_helper remote-metadata "${repos[@]}")
 
 	if [[ ${added[@]} ]]; then

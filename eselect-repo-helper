@@ -108,6 +108,11 @@ def do_remote_metadata(args):
         print(r, "remote", *sync_data)
 
 
+def do_repo_masters(repo):
+    print("TODO: not implemented, and maybe not required")
+    sys.exit(1)
+
+
 def make_configparser(path):
     cfgp = configparser.ConfigParser(interpolation=None)
     if os.path.isdir(path):
@@ -147,6 +152,10 @@ def main():
     metadata_action.add_argument('repo', nargs='+',
                                  help='Repository to print metadata for')
 
+    metadata_action = actions.add_parser(
+        'dependent-repos', help='Print repo masters declared by given layout.conf')
+    metadata_action.add_argument('layout-conf',
+                                 help='Path to the layout.conf file')
     args = p.parse_args()
 
     if args.action == 'list':
@@ -155,6 +164,8 @@ def main():
         do_metadata(args)
     elif args.action == 'remote-metadata':
         do_remote_metadata(args)
+    elif args.action == "repo-masters":
+        do_repo_masts(args)
     else:
         raise NotImplementedError(f'Action {args.action} not implemented')
 
