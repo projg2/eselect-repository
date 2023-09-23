@@ -242,6 +242,8 @@ do_create() {
 	# create the repository boilerplate
 	mkdir -p "${path}"/{metadata,profiles} || die
 	echo "${name}" > "${path}"/profiles/repo_name || die
+	# PMS says PMs must default to EAPI 0 if unset
+	echo "8" > "${path}"/profiles/eapi || die
 	cat > "${path}"/metadata/layout.conf <<-EOF || die
 		masters = gentoo
 		thin-manifests = true
