@@ -21,7 +21,7 @@ CONFIG="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/eselect-repo.conf"
 get_config() {
 	local v vars=(
 		REPOS_CONF REPOS_BASE
-		REMOTE_LIST_URI REMOTE_LIST_CACHEDIR REMOTE_LIST_REFRESH
+		REMOTE_LIST_URI REMOTE_LIST_CACHEDIR REMOTE_LIST_REFRESH OFFLINE_MODE
 	)
 
 	for v in "${vars[@]}"; do
@@ -45,20 +45,31 @@ get_config() {
 update_cache() {
 	local refts
 
-	if [[ -f ${REMOTE_LIST_CACHE} ]]; then
-		refts=$(( $(date '+%s') - REMOTE_LIST_REFRESH ))
-		[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
-	fi
+	if ! [ "${OFFLINE_MODE}" = "true" ]; then
+		if [[ -f ${REMOTE_LIST_CACHE} ]]; then
+			refts=$(( $(date '+%s') - REMOTE_LIST_REFRESH ))
+			[[ $(find "${REMOTE_LIST_CACHE}" -newermt "@${refts}") ]] && return
+		fi
 
-	wget -N -P "${REMOTE_LIST_CACHEDIR}" "${REMOTE_LIST_URI}" ||
-		die -q "unable to fetch repositories.xml"
-	# we need to touch it since:
-	# a. wget defaults to using server timestamp,
-	# b. wget does not update the timestamp if the file did not change
-	# on the server.
-	# (If-Modified-Since will work with the current mtime anyway, unless
-	# user's clock has drifted seriously)
-	touch "${REMOTE_LIST_CACHE}"
+		wget -N -P "${REMOTE_LIST_CACHEDIR}" "${REMOTE_LIST_URI}" ||
+			die -q "unable to fetch repositories.xml"
+		# we need to touch it since:
+		# a. wget defaults to using server timestamp,
+		# b. wget does not update the timestamp if the file did not change
+		# on the server.
+		# (If-Modified-Since will work with the current mtime anyway, unless
+		# user's clock has drifted seriously)
+		touch "${REMOTE_LIST_CACHE}"
+	else
+		# We need some sort of valid XML for the helper to work
+		if [[ -f ${REMOTE_LIST_CACHE} ]]; then
+			cat > ${REMOTE_LIST_CACHE} <<-EOF || die
+				<?xml version="1.0" ?>
+				<metadata>
+				</metadata>
+				EOF
+		fi
+	fi
 }
 
 run_helper() {
@@ -180,7 +191,6 @@ do_add() {
 	local sync_uri=${3}
 
 	get_config
-	update_cache
 
 	local r state arg1 arg2
 	while read r state arg1 arg2; do
@@ -225,7 +235,6 @@ do_create() {
 	[[ ${#} -eq 1 || ${#} -eq 2 ]] || die -q "incorrect parameters to create"
 
 	get_config
-	update_cache
 
 	local name=${1}
 	local path=${2:-${REPOS_BASE}/${name}}
@@ -349,7 +358,6 @@ do_disable() {
 
 	get_config
 	convert_indices "${@}"
-	update_cache
 
 	local r state path removed=()
 	while read r state path; do
@@ -409,7 +417,6 @@ do_remove() {
 
 	get_config
 	convert_indices "${@}"
-	update_cache
 
 	local r state path removed=()
 	while read r state path; do
